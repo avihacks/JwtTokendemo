@@ -37,7 +37,8 @@ BCryptPasswordEncoder passwordEncoder() {
 
 @Bean
 public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-    return config.getAuthenticationManager();
+    System.out.println("AuthenticationManager bean created!");
+	return config.getAuthenticationManager();
 }
 
 @Bean

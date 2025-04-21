@@ -7,7 +7,7 @@ import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
 @EntityScan(basePackages = {"com.JWTToken.JWTTokenSample.entity"})  
-@ComponentScan(basePackages = {"com.JWTToken.JWTTokenSample.service", "com.JWTToken.JWTTokenSample.repo"})
+@ComponentScan(basePackages = {"com.JWTToken.JWTTokenSample","com.JWTToken.JWTTokenSample.service", "com.JWTToken.JWTTokenSample.repo"})
 public class JwtTokenSampleApplication {
 
 	public static void main(String[] args) {

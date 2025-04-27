@@ -6,6 +6,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.JWTToken.JWTTokenSample.repo.RevokedTokenRepository;
 import com.JWTToken.JWTTokenSample.service.JwtService;
 
 import jakarta.servlet.FilterChain;
@@ -27,15 +28,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
 
 	 private final JwtService jwtService;
 	    private final UserDetailsService userDetailsService;
+	    private final RevokedTokenRepository revokedTokenRepository;
+
 
 	    public JwtAuthenticationFilter(
 	        JwtService jwtService,
 	        UserDetailsService userDetailsService,
-	        HandlerExceptionResolver handlerExceptionResolver
+	        HandlerExceptionResolver handlerExceptionResolver,
+	        RevokedTokenRepository revokedTokenRepository
+	     
 	    ) {
 	        this.jwtService = jwtService;
 	        this.userDetailsService = userDetailsService;
 	        this.handlerExceptionResolver = handlerExceptionResolver;
+	        this.revokedTokenRepository= revokedTokenRepository;
 	    }
 
 	    @Override
@@ -45,10 +51,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
 	        @NonNull FilterChain filterChain
 	    ) throws ServletException, IOException {
 	        final String authHeader = request.getHeader("Authorization");
-
-	        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+	        final String path = request.getServletPath(); // Get URL path
+	        // Allow public APIs (like /auth/**) without token
+	       
+	        if (path.startsWith("/auth/login") || path.startsWith("/auth/signup")) {
 	            filterChain.doFilter(request, response);
 	            return;
+	        }
+	        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+	           // filterChain.doFilter(request, response);
+	          //  return;
+	        	
+	        	   handlerExceptionResolver.resolveException(
+	        	            request, 
+	        	            response, 
+	        	            null, 
+	        	            new RuntimeException("Missing or invalid Authorization header.")
+	        	        );
+	        	        return;
 	        }
 
 	        try {
@@ -72,6 +92,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
 	                }
 	            }
 
+	         // ⛔ Check if token is revoked
+	            if (revokedTokenRepository.existsByToken(jwt)) {
+	                handlerExceptionResolver.resolveException(request, response, null, new RuntimeException("Token has been revoked"));
+	                return;
+	            }
 	            filterChain.doFilter(request, response);
 	        } catch (Exception exception) {
 	            handlerExceptionResolver.resolveException(request, response, null, exception);

@@ -85,4 +85,9 @@ public class JwtService {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
+    
+ // In JwtService or in Redis/db
+    boolean isTokenRevoked(String token) {
+        return revokedTokenRepository.existsByToken(token);
+    }
 }
